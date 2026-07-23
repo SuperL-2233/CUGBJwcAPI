@@ -84,6 +84,28 @@ GET /api/v1/notices/2026-07-23/123456
 }
 ```
 
+### 学院栏目
+
+新闻列表：
+
+```http
+GET /api/v1/college/news
+GET /api/v1/college/news?page=2
+GET /api/v1/college/news/latest
+GET /api/v1/college/news/{date}/{id}
+```
+
+公告列表：
+
+```http
+GET /api/v1/college/notices
+GET /api/v1/college/notices?page=2
+GET /api/v1/college/notices/latest
+GET /api/v1/college/notices/{date}/{id}
+```
+
+两组接口与前述列表和正文接口使用相同的响应结构。当前来源页面每页展示 10 条，实际数量和可用页数由来源网站决定。列表响应中的 `detail_path` 已包含正确的栏目路径，可以直接调用。
+
 ## 运行
 
 要求 Python 3.10 或更高版本，运行时没有第三方依赖。
@@ -106,6 +128,8 @@ python -m cugb_jwc_api --config config.json serve --host 0.0.0.0 --port 8080
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/notices
 Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/notices?page=2'
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/notices/2026-07-23/123456
+Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/college/news?page=2'
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/college/notices/latest
 ```
 
 ## 配置
@@ -116,6 +140,10 @@ Invoke-RestMethod http://127.0.0.1:8000/api/v1/notices/2026-07-23/123456
   "request_timeout_seconds": 10,
   "request_retries": 2,
   "cache_ttl_seconds": 60,
+  "college": {
+    "news_url": "https://sai.cugb.edu.cn/xyxw/",
+    "notices_url": "https://sai.cugb.edu.cn/xygg/"
+  },
   "server": {
     "host": "127.0.0.1",
     "port": 8000
@@ -123,7 +151,7 @@ Invoke-RestMethod http://127.0.0.1:8000/api/v1/notices/2026-07-23/123456
 }
 ```
 
-列表各页和每条正文分别缓存。缓存只保存在进程内存中，不会记录用户请求或在后台主动访问上游。缓存到期后的第一个 API 请求会刷新对应内容；若刷新失败但已有旧缓存，响应会返回旧数据并将 `meta.stale` 设为 `true`。首次读取失败则返回 HTTP 502。
+各来源、栏目、列表页和正文分别缓存。缓存只保存在进程内存中，不会记录用户请求或在后台主动访问上游。缓存到期后的第一个 API 请求会刷新对应内容；若刷新失败但已有旧缓存，响应会返回旧数据并将 `meta.stale` 设为 `true`。首次读取失败则返回 HTTP 502。
 
 若要对公网提供服务，建议在前面部署带 HTTPS、访问日志和限流的反向代理。默认只监听本机地址。
 

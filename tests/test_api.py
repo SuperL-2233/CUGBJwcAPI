@@ -1,6 +1,6 @@
 import unittest
 
-from cugb_jwc_api.api import ApiApplication
+from cugb_jwc_api.api import ApiApplication, NoticeCollection
 from cugb_jwc_api.client import ResourceNotFound
 from cugb_jwc_api.models import DetailSnapshot, Notice, NoticeDetail, Snapshot
 
@@ -105,6 +105,29 @@ class ApiTests(unittest.TestCase):
         response = app.dispatch("GET", "/api/v1/notices")
         self.assertEqual(502, response.status)
         self.assertEqual("upstream_unavailable", response.payload["error"])
+
+    def test_extra_collection_has_its_own_routes_and_detail_paths(self):
+        college_repository = FakeRepository(self.repository.snapshot)
+        app = ApiApplication(
+            self.repository,
+            "https://example.test/notices/",
+            extra_collections={
+                "/api/v1/college/news": NoticeCollection(
+                    college_repository, "https://college.example.test/news/"
+                )
+            },
+        )
+        response = app.dispatch("GET", "/api/v1/college/news?page=3")
+        self.assertEqual(200, response.status)
+        self.assertEqual(3, response.payload["meta"]["page"])
+        self.assertEqual(
+            "/api/v1/college/news/2026-07-23/1",
+            response.payload["data"][0]["detail_path"],
+        )
+
+        detail = app.dispatch("GET", "/api/v1/college/news/2026-07-23/100002")
+        self.assertEqual(200, detail.status)
+        self.assertEqual("详情标题", detail.payload["data"]["title"])
 
 
 if __name__ == "__main__":

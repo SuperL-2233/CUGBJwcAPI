@@ -13,12 +13,19 @@ class ServerSettings:
 
 
 @dataclass(frozen=True, slots=True)
+class CollegeSettings:
+    news_url: str = "https://sai.cugb.edu.cn/xyxw/"
+    notices_url: str = "https://sai.cugb.edu.cn/xygg/"
+
+
+@dataclass(frozen=True, slots=True)
 class Settings:
     source_url: str = "https://jwc.cugb.edu.cn/xszq/"
     request_timeout_seconds: float = 10
     request_retries: int = 2
     cache_ttl_seconds: int = 60
     server: ServerSettings = field(default_factory=ServerSettings)
+    college: CollegeSettings = field(default_factory=CollegeSettings)
 
 
 def load_settings(path: Path) -> Settings:
@@ -34,6 +41,9 @@ def load_settings(path: Path) -> Settings:
     server_raw = raw.get("server", {})
     if not isinstance(server_raw, dict):
         raise ValueError("server must be a JSON object")
+    college_raw = raw.get("college", {})
+    if not isinstance(college_raw, dict):
+        raise ValueError("college must be a JSON object")
     settings = Settings(
         source_url=str(raw.get("source_url", "https://jwc.cugb.edu.cn/xszq/")),
         request_timeout_seconds=float(raw.get("request_timeout_seconds", 10)),
@@ -42,6 +52,14 @@ def load_settings(path: Path) -> Settings:
         server=ServerSettings(
             host=str(server_raw.get("host", "127.0.0.1")),
             port=int(server_raw.get("port", 8000)),
+        ),
+        college=CollegeSettings(
+            news_url=str(
+                college_raw.get("news_url", "https://sai.cugb.edu.cn/xyxw/")
+            ),
+            notices_url=str(
+                college_raw.get("notices_url", "https://sai.cugb.edu.cn/xygg/")
+            ),
         ),
     )
     _validate(settings)
@@ -52,6 +70,13 @@ def _validate(settings: Settings) -> None:
     parsed = urlparse(settings.source_url)
     if parsed.scheme != "https" or not parsed.netloc:
         raise ValueError("source_url must be an HTTPS URL")
+    for name, value in {
+        "college.news_url": settings.college.news_url,
+        "college.notices_url": settings.college.notices_url,
+    }.items():
+        parsed_college_url = urlparse(value)
+        if parsed_college_url.scheme != "https" or not parsed_college_url.netloc:
+            raise ValueError(f"{name} must be an HTTPS URL")
     if settings.request_timeout_seconds <= 0:
         raise ValueError("request_timeout_seconds must be positive")
     if not 0 <= settings.request_retries <= 10:

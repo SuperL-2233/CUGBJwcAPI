@@ -15,15 +15,14 @@ class Notice:
     def notice_id(self) -> str:
         return PurePosixPath(urlsplit(self.url).path).stem
 
-    @property
-    def detail_path(self) -> str:
-        return f"/api/v1/notices/{self.published_date}/{self.notice_id}"
+    def detail_path(self, prefix: str = "/api/v1/notices") -> str:
+        return f"{prefix}/{self.published_date}/{self.notice_id}"
 
-    def to_dict(self) -> dict[str, str]:
+    def to_dict(self, detail_prefix: str = "/api/v1/notices") -> dict[str, str]:
         return {
             **asdict(self),
             "id": self.notice_id,
-            "detail_path": self.detail_path,
+            "detail_path": self.detail_path(detail_prefix),
         }
 
 

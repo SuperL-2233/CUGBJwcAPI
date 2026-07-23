@@ -5,8 +5,9 @@ import logging
 import sys
 from pathlib import Path
 
-from .api import ApiApplication
+from .api import ApiApplication, NoticeCollection
 from .client import NoticeClient
+from .college_client import CollegeNoticeClient
 from .repository import NoticeRepository
 from .server import serve
 from .settings import load_settings
@@ -48,7 +49,29 @@ def main(argv: list[str] | None = None) -> int:
             retries=settings.request_retries,
         )
         repository = NoticeRepository(client, settings.cache_ttl_seconds)
-        serve(ApiApplication(repository, settings.source_url), host, port)
+        college_collections = {}
+        for prefix, source_url in {
+            "/api/v1/college/news": settings.college.news_url,
+            "/api/v1/college/notices": settings.college.notices_url,
+        }.items():
+            college_client = CollegeNoticeClient(
+                source_url,
+                timeout_seconds=settings.request_timeout_seconds,
+                retries=settings.request_retries,
+            )
+            college_collections[prefix] = NoticeCollection(
+                NoticeRepository(college_client, settings.cache_ttl_seconds),
+                source_url,
+            )
+        serve(
+            ApiApplication(
+                repository,
+                settings.source_url,
+                extra_collections=college_collections,
+            ),
+            host,
+            port,
+        )
         return 0
     except KeyboardInterrupt:
         print("已停止。")
