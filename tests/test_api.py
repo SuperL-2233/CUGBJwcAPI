@@ -1,7 +1,8 @@
 import unittest
 
 from cugb_jwc_api.api import ApiApplication
-from cugb_jwc_api.models import Notice, Snapshot
+from cugb_jwc_api.client import ResourceNotFound
+from cugb_jwc_api.models import DetailSnapshot, Notice, NoticeDetail, Snapshot
 
 
 class FakeRepository:
@@ -10,11 +11,32 @@ class FakeRepository:
         self.error = error
         self.calls = 0
 
-    def get(self):
+    def get_page(self, page=1):
         self.calls += 1
         if self.error:
             raise self.error
-        return self.snapshot
+        return Snapshot(
+            self.snapshot.notices,
+            self.snapshot.fetched_at,
+            page=page,
+            stale=self.snapshot.stale,
+        )
+
+    def get_detail(self, published_date, notice_id):
+        self.calls += 1
+        if self.error:
+            raise self.error
+        return DetailSnapshot(
+            NoticeDetail(
+                notice_id=notice_id,
+                title="详情标题",
+                published_date=published_date,
+                author="作者",
+                url=f"https://example.test/c/{published_date}/{notice_id}.shtml",
+                content="正文",
+            ),
+            "2026-07-23T00:00:00+00:00",
+        )
 
 
 class ApiTests(unittest.TestCase):
@@ -32,16 +54,41 @@ class ApiTests(unittest.TestCase):
         self.assertEqual("notice-api", response.payload["service"])
         self.assertEqual(0, self.repository.calls)
 
-    def test_lists_notices_with_metadata(self):
-        response = self.app.dispatch("GET", "/api/v1/notices?ignored=true")
+    def test_lists_requested_page_with_metadata(self):
+        response = self.app.dispatch("GET", "/api/v1/notices?page=2")
         self.assertEqual(200, response.status)
         self.assertEqual("测试通知", response.payload["data"][0]["title"])
         self.assertEqual(1, response.payload["meta"]["count"])
+        self.assertEqual(2, response.payload["meta"]["page"])
+
+    def test_rejects_invalid_page(self):
+        response = self.app.dispatch("GET", "/api/v1/notices?page=abc")
+        self.assertEqual(400, response.status)
+        self.assertEqual("invalid_page", response.payload["error"])
 
     def test_returns_latest_notice(self):
         response = self.app.dispatch("GET", "/api/v1/notices/latest/")
         self.assertEqual(200, response.status)
         self.assertEqual(self.notice.to_dict(), response.payload["data"])
+
+    def test_returns_notice_detail(self):
+        response = self.app.dispatch("GET", "/api/v1/notices/2026-07-23/100002")
+        self.assertEqual(200, response.status)
+        self.assertEqual("详情标题", response.payload["data"]["title"])
+        self.assertEqual("正文", response.payload["data"]["content"])
+
+    def test_rejects_invalid_detail_date(self):
+        response = self.app.dispatch("GET", "/api/v1/notices/2026-02-31/100002")
+        self.assertEqual(400, response.status)
+        self.assertEqual("invalid_date", response.payload["error"])
+
+    def test_missing_detail_returns_404(self):
+        app = ApiApplication(
+            FakeRepository(error=ResourceNotFound("missing")), "https://example.test/"
+        )
+        response = app.dispatch("GET", "/api/v1/notices/2026-07-23/100002")
+        self.assertEqual(404, response.status)
+        self.assertEqual("notice_not_found", response.payload["error"])
 
     def test_rejects_mutating_methods(self):
         response = self.app.dispatch("POST", "/api/v1/notices")

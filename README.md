@@ -16,13 +16,14 @@ GET /health
 {"status":"ok","service":"notice-api"}
 ```
 
-### 当前通知列表
+### 通知列表与分页
 
 ```http
 GET /api/v1/notices
+GET /api/v1/notices?page=2
 ```
 
-响应中的 `data` 按来源页面顺序排列；`meta.stale` 表示上游暂时不可用时是否返回了过期缓存。
+`page` 默认为 `1`，可指定 `1` 到 `1000` 之间的整数。实际可用页数由来源网站决定。响应中的 `data` 按来源页面顺序排列；`meta.stale` 表示上游暂时不可用时是否返回了过期缓存。
 
 ```json
 {
@@ -30,13 +31,16 @@ GET /api/v1/notices
     {
       "title": "通知标题",
       "published_date": "2026-07-23",
-      "url": "https://jwc.cugb.edu.cn/c/example.shtml"
+      "url": "https://jwc.cugb.edu.cn/c/2026-07-23/123456.shtml",
+      "id": "123456",
+      "detail_path": "/api/v1/notices/2026-07-23/123456"
     }
   ],
   "meta": {
     "source": "https://jwc.cugb.edu.cn/xszq/",
     "fetched_at": "2026-07-23T06:00:00+00:00",
     "stale": false,
+    "page": 1,
     "count": 1
   }
 }
@@ -46,6 +50,38 @@ GET /api/v1/notices
 
 ```http
 GET /api/v1/notices/latest
+```
+
+### 通知正文
+
+使用列表响应中的 `detail_path`，或按以下格式调用：
+
+```http
+GET /api/v1/notices/{date}/{id}
+GET /api/v1/notices/2026-07-23/123456
+```
+
+响应返回标题、作者、发布日期、纯文本正文，以及正文中的链接和图片地址：
+
+```json
+{
+  "data": {
+    "notice_id": "123456",
+    "title": "通知标题",
+    "published_date": "2026-07-23",
+    "author": "",
+    "url": "https://jwc.cugb.edu.cn/c/2026-07-23/123456.shtml",
+    "content": "第一段正文。\n第二段正文。",
+    "links": [
+      {"text": "附件", "url": "https://jwc.cugb.edu.cn/download/file.pdf"}
+    ],
+    "images": []
+  },
+  "meta": {
+    "fetched_at": "2026-07-23T06:00:00+00:00",
+    "stale": false
+  }
+}
 ```
 
 ## 运行
@@ -68,6 +104,8 @@ python -m cugb_jwc_api --config config.json serve --host 0.0.0.0 --port 8080
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/notices
+Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/notices?page=2'
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/notices/2026-07-23/123456
 ```
 
 ## 配置
@@ -85,7 +123,7 @@ Invoke-RestMethod http://127.0.0.1:8000/api/v1/notices
 }
 ```
 
-缓存只保存在进程内存中，不会记录用户请求或在后台主动访问上游。缓存到期后的第一个 API 请求会刷新数据；若刷新失败但已有旧缓存，响应会返回旧数据并将 `meta.stale` 设为 `true`。首次读取失败则返回 HTTP 502。
+列表各页和每条正文分别缓存。缓存只保存在进程内存中，不会记录用户请求或在后台主动访问上游。缓存到期后的第一个 API 请求会刷新对应内容；若刷新失败但已有旧缓存，响应会返回旧数据并将 `meta.stale` 设为 `true`。首次读取失败则返回 HTTP 502。
 
 若要对公网提供服务，建议在前面部署带 HTTPS、访问日志和限流的反向代理。默认只监听本机地址。
 

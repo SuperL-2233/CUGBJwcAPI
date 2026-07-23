@@ -3,14 +3,19 @@ from __future__ import annotations
 import gzip
 import time
 from urllib.error import HTTPError, URLError
+from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
-from .models import Notice
-from .parser import parse_notices
+from .models import Notice, NoticeDetail
+from .parser import parse_notice_detail, parse_notices
 
 
 class FetchError(RuntimeError):
     """Raised after all attempts to download the notice page fail."""
+
+
+class ResourceNotFound(FetchError):
+    """Raised when a requested upstream page does not exist."""
 
 
 class NoticeClient:
@@ -25,13 +30,38 @@ class NoticeClient:
         self.retries = retries
 
     def fetch(self) -> list[Notice]:
+        return self.fetch_page(1)
+
+    def fetch_page(self, page: int) -> list[Notice]:
+        if page < 1:
+            raise ValueError("page must be positive")
+        page_url = self.source_url if page == 1 else urljoin(
+            self.source_url, f"index_{page}.shtml"
+        )
+        html, final_url = self._download(page_url)
+        return parse_notices(html, final_url)
+
+    def fetch_detail(self, published_date: str, notice_id: str) -> NoticeDetail:
+        detail_url = urljoin(
+            self.source_url,
+            f"/c/{published_date}/{notice_id}.shtml",
+        )
+        html, final_url = self._download(detail_url)
+        return parse_notice_detail(
+            html,
+            final_url,
+            notice_id=notice_id,
+            fallback_date=published_date,
+        )
+
+    def _download(self, url: str) -> tuple[str, str]:
         last_error: Exception | None = None
         for attempt in range(self.retries + 1):
             try:
                 request = Request(
-                    self.source_url,
+                    url,
                     headers={
-                        "User-Agent": "CUGB-JWC-API/1.0",
+                        "User-Agent": "Notice-API/1.1",
                         "Accept": "text/html,application/xhtml+xml",
                         "Accept-Encoding": "gzip",
                     },
@@ -42,11 +72,17 @@ class NoticeClient:
                         body = gzip.decompress(body)
                     charset = response.headers.get_content_charset() or "utf-8"
                     html = body.decode(charset, errors="replace")
-                    return parse_notices(html, response.geturl())
-            except (HTTPError, URLError, TimeoutError, OSError, UnicodeError) as error:
+                    return html, response.geturl()
+            except HTTPError as error:
+                if error.code == 404:
+                    raise ResourceNotFound(f"Upstream resource not found: {url}") from error
+                last_error = error
+                if attempt < self.retries:
+                    time.sleep(2**attempt)
+            except (URLError, TimeoutError, OSError, UnicodeError) as error:
                 last_error = error
                 if attempt < self.retries:
                     time.sleep(2**attempt)
         raise FetchError(
-            f"Failed to fetch {self.source_url!r} after {self.retries + 1} attempts"
+            f"Failed to fetch {url!r} after {self.retries + 1} attempts"
         ) from last_error
