@@ -1,6 +1,6 @@
-# CUGB JWC API
+# Notice List API
 
-一个独立实现的中国地质大学（北京）教务处公开通知只读 JSON API。服务按请求读取“学生专区”列表页，并使用短时内存缓存降低对上游网站的访问频率。
+一个简单的公开通知列表只读 JSON API。服务按请求读取指定页面，并使用短时内存缓存降低对上游网站的访问频率。
 
 本项目没有机器人、后台轮询、邮件、消息推送或用户状态功能。它只访问公开网页，不需要教务系统账号，也不绕过登录、验证码或访问控制。
 
@@ -13,7 +13,7 @@ GET /health
 ```
 
 ```json
-{"status":"ok","service":"cugb-jwc-api"}
+{"status":"ok","service":"notice-api"}
 ```
 
 ### 当前通知列表
@@ -22,7 +22,7 @@ GET /health
 GET /api/v1/notices
 ```
 
-响应中的 `data` 按教务处页面顺序排列；`meta.stale` 表示上游暂时不可用时是否返回了过期缓存。
+响应中的 `data` 按来源页面顺序排列；`meta.stale` 表示上游暂时不可用时是否返回了过期缓存。
 
 ```json
 {
@@ -103,4 +103,4 @@ python -m unittest discover -s tests -v
 
 ## 许可证
 
-本项目采用 [MIT License](LICENSE)。该许可证仅覆盖本仓库中的原创实现，不代表中国地质大学（北京）网站内容或标识采用相同许可证。
+本项目采用 [MIT License](LICENSE)。该许可证仅覆盖本仓库中的原创实现，不代表来源网站的内容或标识采用相同许可证。

@@ -1,4 +1,4 @@
-"""Read-only API for CUGB JWC public notices."""
+"""Read-only API for a public notice page."""
 
 from .models import Notice, Snapshot
 

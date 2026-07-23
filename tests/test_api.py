@@ -29,6 +29,7 @@ class ApiTests(unittest.TestCase):
         response = self.app.dispatch("GET", "/health")
         self.assertEqual(200, response.status)
         self.assertEqual("ok", response.payload["status"])
+        self.assertEqual("notice-api", response.payload["service"])
         self.assertEqual(0, self.repository.calls)
 
     def test_lists_notices_with_metadata(self):

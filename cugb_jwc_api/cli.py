@@ -15,7 +15,7 @@ from .settings import load_settings
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="cugb-jwc-api",
-        description="中国地质大学（北京）教务处公开通知只读 JSON API",
+        description="公开通知列表只读 JSON API",
     )
     parser.add_argument("--config", type=Path, default=Path("config.json"))
     parser.add_argument("--verbose", action="store_true")

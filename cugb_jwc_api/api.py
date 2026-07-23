@@ -27,7 +27,7 @@ class ApiApplication:
 
         path = urlsplit(target).path.rstrip("/") or "/"
         if path == "/health":
-            return ApiResponse(200, {"status": "ok", "service": "cugb-jwc-api"})
+            return ApiResponse(200, {"status": "ok", "service": "notice-api"})
         if path not in {"/api/v1/notices", "/api/v1/notices/latest"}:
             return ApiResponse(404, {"error": "not_found"})
 
