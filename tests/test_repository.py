@@ -1,7 +1,7 @@
 import unittest
 
-from cugb_jwc_api.models import Notice, NoticeDetail
-from cugb_jwc_api.repository import NoticeRepository
+from cugb_api.models import Notice, NoticeDetail
+from cugb_api.repository import NoticeRepository
 
 
 class FakeClient:

@@ -13,7 +13,7 @@ class ServerSettings:
 
 
 @dataclass(frozen=True, slots=True)
-class CollegeSettings:
+class AiCollegeSettings:
     news_url: str = "https://sai.cugb.edu.cn/xyxw/"
     notices_url: str = "https://sai.cugb.edu.cn/xygg/"
 
@@ -31,7 +31,7 @@ class Settings:
     request_retries: int = 2
     cache_ttl_seconds: int = 60
     server: ServerSettings = field(default_factory=ServerSettings)
-    college: CollegeSettings = field(default_factory=CollegeSettings)
+    ai_college: AiCollegeSettings = field(default_factory=AiCollegeSettings)
     student_affairs: StudentAffairsSettings = field(default_factory=StudentAffairsSettings)
 
 
@@ -48,9 +48,9 @@ def load_settings(path: Path) -> Settings:
     server_raw = raw.get("server", {})
     if not isinstance(server_raw, dict):
         raise ValueError("server must be a JSON object")
-    college_raw = raw.get("college", {})
-    if not isinstance(college_raw, dict):
-        raise ValueError("college must be a JSON object")
+    ai_college_raw = raw.get("ai_college", {})
+    if not isinstance(ai_college_raw, dict):
+        raise ValueError("ai_college must be a JSON object")
     student_affairs_raw = raw.get("student_affairs", {})
     if not isinstance(student_affairs_raw, dict):
         raise ValueError("student_affairs must be a JSON object")
@@ -63,12 +63,12 @@ def load_settings(path: Path) -> Settings:
             host=str(server_raw.get("host", "127.0.0.1")),
             port=int(server_raw.get("port", 8000)),
         ),
-        college=CollegeSettings(
+        ai_college=AiCollegeSettings(
             news_url=str(
-                college_raw.get("news_url", "https://sai.cugb.edu.cn/xyxw/")
+                ai_college_raw.get("news_url", "https://sai.cugb.edu.cn/xyxw/")
             ),
             notices_url=str(
-                college_raw.get("notices_url", "https://sai.cugb.edu.cn/xygg/")
+                ai_college_raw.get("notices_url", "https://sai.cugb.edu.cn/xygg/")
             ),
         ),
         student_affairs=StudentAffairsSettings(
@@ -93,13 +93,13 @@ def _validate(settings: Settings) -> None:
     if parsed.scheme != "https" or not parsed.netloc:
         raise ValueError("source_url must be an HTTPS URL")
     for name, value in {
-        "college.news_url": settings.college.news_url,
-        "college.notices_url": settings.college.notices_url,
+        "ai_college.news_url": settings.ai_college.news_url,
+        "ai_college.notices_url": settings.ai_college.notices_url,
         "student_affairs.news_url": settings.student_affairs.news_url,
         "student_affairs.notices_url": settings.student_affairs.notices_url,
     }.items():
-        parsed_college_url = urlparse(value)
-        if parsed_college_url.scheme != "https" or not parsed_college_url.netloc:
+        parsed_section_url = urlparse(value)
+        if parsed_section_url.scheme != "https" or not parsed_section_url.netloc:
             raise ValueError(f"{name} must be an HTTPS URL")
     if settings.request_timeout_seconds <= 0:
         raise ValueError("request_timeout_seconds must be positive")

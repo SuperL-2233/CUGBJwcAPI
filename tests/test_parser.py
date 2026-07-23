@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 
-from cugb_jwc_api.parser import NoticeParseError, parse_notice_detail, parse_notices
+from cugb_api.parser import NoticeParseError, parse_notice_detail, parse_notices
 
 
 class ParserTests(unittest.TestCase):

@@ -8,7 +8,7 @@ from .models import ContentLink, Notice, NoticeDetail
 from .parser import NoticeParseError
 
 
-class _CollegeListParser(HTMLParser):
+class _CmsListParser(HTMLParser):
     def __init__(self, base_url: str) -> None:
         super().__init__(convert_charrefs=True)
         self.base_url = base_url
@@ -57,16 +57,16 @@ class _CollegeListParser(HTMLParser):
             self._date_parts.append(data)
 
 
-def parse_college_notices(html: str, base_url: str) -> list[Notice]:
-    parser = _CollegeListParser(base_url)
+def parse_cms_notices(html: str, base_url: str) -> list[Notice]:
+    parser = _CmsListParser(base_url)
     parser.feed(html)
     parser.close()
     if not parser.notices:
-        raise NoticeParseError("No college notices found; the upstream layout may have changed")
+        raise NoticeParseError("No CMS notices found; the upstream layout may have changed")
     return parser.notices
 
 
-class _CollegeDetailParser(HTMLParser):
+class _CmsDetailParser(HTMLParser):
     _block_tags = {"p", "div", "li", "tr", "section", "article", "h1", "h2", "h3"}
 
     def __init__(self, base_url: str) -> None:
@@ -151,21 +151,21 @@ class _CollegeDetailParser(HTMLParser):
                 self._link_parts.append(data)
 
 
-def parse_college_detail(
+def parse_cms_detail(
     html: str,
     base_url: str,
     *,
     notice_id: str,
     fallback_date: str,
 ) -> NoticeDetail:
-    parser = _CollegeDetailParser(base_url)
+    parser = _CmsDetailParser(base_url)
     parser.feed(html)
     parser.close()
     title = " ".join("".join(parser.title_parts).split())
     lines = [" ".join(line.split()) for line in "".join(parser.content_parts).splitlines()]
     content = "\n".join(line for line in lines if line)
     if not title or not content:
-        raise NoticeParseError("College detail content was not found; the layout may have changed")
+        raise NoticeParseError("CMS detail content was not found; the layout may have changed")
 
     description = " ".join("".join(parser.description_parts).split())
     date_match = re.search(r"(\d{4}-\d{2}-\d{2})", description)

@@ -3,7 +3,7 @@
   "request_timeout_seconds": 10,
   "request_retries": 2,
   "cache_ttl_seconds": 60,
-  "college": {
+  "ai_college": {
     "news_url": "https://sai.cugb.edu.cn/xyxw/",
     "notices_url": "https://sai.cugb.edu.cn/xygg/"
   },

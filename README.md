@@ -1,4 +1,4 @@
-# Notice List API
+# CUGBAPI
 
 一个简单的公开通知列表只读 JSON API。服务按请求读取指定页面，并使用短时内存缓存降低对上游网站的访问频率。
 
@@ -84,24 +84,24 @@ GET /api/v1/notices/2026-07-23/123456
 }
 ```
 
-### 学院栏目
+### AI 学院栏目
 
 新闻列表：
 
 ```http
-GET /api/v1/college/news
-GET /api/v1/college/news?page=2
-GET /api/v1/college/news/latest
-GET /api/v1/college/news/{date}/{id}
+GET /api/v1/ai-college/news
+GET /api/v1/ai-college/news?page=2
+GET /api/v1/ai-college/news/latest
+GET /api/v1/ai-college/news/{date}/{id}
 ```
 
 公告列表：
 
 ```http
-GET /api/v1/college/notices
-GET /api/v1/college/notices?page=2
-GET /api/v1/college/notices/latest
-GET /api/v1/college/notices/{date}/{id}
+GET /api/v1/ai-college/notices
+GET /api/v1/ai-college/notices?page=2
+GET /api/v1/ai-college/notices/latest
+GET /api/v1/ai-college/notices/{date}/{id}
 ```
 
 两组接口与前述列表和正文接口使用相同的响应结构。当前来源页面每页展示 10 条，实际数量和可用页数由来源网站决定。列表响应中的 `detail_path` 已包含正确的栏目路径，可以直接调用。
@@ -134,14 +134,14 @@ GET /api/v1/student-affairs/notices/{date}/{id}
 
 ```powershell
 Copy-Item config.example.json config.json
-python -m cugb_jwc_api --config config.json check-config
-python -m cugb_jwc_api --config config.json serve
+python -m cugb_api --config config.json check-config
+python -m cugb_api --config config.json serve
 ```
 
 默认监听 `http://127.0.0.1:8000`。也可以覆盖地址和端口：
 
 ```powershell
-python -m cugb_jwc_api --config config.json serve --host 0.0.0.0 --port 8080
+python -m cugb_api --config config.json serve --host 0.0.0.0 --port 8080
 ```
 
 调用示例：
@@ -150,8 +150,8 @@ python -m cugb_jwc_api --config config.json serve --host 0.0.0.0 --port 8080
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/notices
 Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/notices?page=2'
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/notices/2026-07-23/123456
-Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/college/news?page=2'
-Invoke-RestMethod http://127.0.0.1:8000/api/v1/college/notices/latest
+Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/ai-college/news?page=2'
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/ai-college/notices/latest
 Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/student-affairs/news?page=2'
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/student-affairs/notices/latest
 ```
@@ -164,7 +164,7 @@ Invoke-RestMethod http://127.0.0.1:8000/api/v1/student-affairs/notices/latest
   "request_timeout_seconds": 10,
   "request_retries": 2,
   "cache_ttl_seconds": 60,
-  "college": {
+  "ai_college": {
     "news_url": "https://sai.cugb.edu.cn/xyxw/",
     "notices_url": "https://sai.cugb.edu.cn/xygg/"
   },
@@ -182,6 +182,13 @@ Invoke-RestMethod http://127.0.0.1:8000/api/v1/student-affairs/notices/latest
 各来源、栏目、列表页和正文分别缓存。缓存只保存在进程内存中，不会记录用户请求或在后台主动访问上游。缓存到期后的第一个 API 请求会刷新对应内容；若刷新失败但已有旧缓存，响应会返回旧数据并将 `meta.stale` 设为 `true`。首次读取失败则返回 HTTP 502。
 
 若要对公网提供服务，建议在前面部署带 HTTPS、访问日志和限流的反向代理。默认只监听本机地址。
+
+## 2.0 命名变更
+
+- Python 包由 `cugb_jwc_api` 改为 `cugb_api`。
+- 命令行入口由 `cugb-jwc-api` 改为 `cugb-api`。
+- AI 学院路由由 `/api/v1/college` 改为 `/api/v1/ai-college`。
+- 配置项由 `college` 改为 `ai_college`。
 
 ## 测试
 

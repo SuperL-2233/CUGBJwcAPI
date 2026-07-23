@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .api import ApiApplication, NoticeCollection
 from .client import NoticeClient
-from .college_client import CollegeNoticeClient
+from .cms_client import CmsNoticeClient
 from .repository import NoticeRepository
 from .server import serve
 from .settings import load_settings
@@ -15,7 +15,7 @@ from .settings import load_settings
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="cugb-jwc-api",
+        prog="cugb-api",
         description="公开通知列表只读 JSON API",
     )
     parser.add_argument("--config", type=Path, default=Path("config.json"))
@@ -49,31 +49,31 @@ def main(argv: list[str] | None = None) -> int:
             retries=settings.request_retries,
         )
         repository = NoticeRepository(client, settings.cache_ttl_seconds)
-        college_collections = {}
+        extra_collections = {}
         for prefix, source_url in {
-            "/api/v1/college/news": settings.college.news_url,
-            "/api/v1/college/notices": settings.college.notices_url,
+            "/api/v1/ai-college/news": settings.ai_college.news_url,
+            "/api/v1/ai-college/notices": settings.ai_college.notices_url,
         }.items():
-            college_client = CollegeNoticeClient(
+            ai_college_client = CmsNoticeClient(
                 source_url,
                 timeout_seconds=settings.request_timeout_seconds,
                 retries=settings.request_retries,
             )
-            college_collections[prefix] = NoticeCollection(
-                NoticeRepository(college_client, settings.cache_ttl_seconds),
+            extra_collections[prefix] = NoticeCollection(
+                NoticeRepository(ai_college_client, settings.cache_ttl_seconds),
                 source_url,
             )
         for prefix, source_url in {
             "/api/v1/student-affairs/news": settings.student_affairs.news_url,
             "/api/v1/student-affairs/notices": settings.student_affairs.notices_url,
         }.items():
-            student_affairs_client = CollegeNoticeClient(
+            student_affairs_client = CmsNoticeClient(
                 source_url,
                 timeout_seconds=settings.request_timeout_seconds,
                 retries=settings.request_retries,
                 detail_path_prefix="/xgb/c",
             )
-            college_collections[prefix] = NoticeCollection(
+            extra_collections[prefix] = NoticeCollection(
                 NoticeRepository(student_affairs_client, settings.cache_ttl_seconds),
                 source_url,
             )
@@ -81,7 +81,7 @@ def main(argv: list[str] | None = None) -> int:
             ApiApplication(
                 repository,
                 settings.source_url,
-                extra_collections=college_collections,
+                extra_collections=extra_collections,
             ),
             host,
             port,
