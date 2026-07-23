@@ -106,6 +106,28 @@ GET /api/v1/college/notices/{date}/{id}
 
 两组接口与前述列表和正文接口使用相同的响应结构。当前来源页面每页展示 10 条，实际数量和可用页数由来源网站决定。列表响应中的 `detail_path` 已包含正确的栏目路径，可以直接调用。
 
+### 学工栏目
+
+工作动态：
+
+```http
+GET /api/v1/student-affairs/news
+GET /api/v1/student-affairs/news?page=2
+GET /api/v1/student-affairs/news/latest
+GET /api/v1/student-affairs/news/{date}/{id}
+```
+
+通知公告：
+
+```http
+GET /api/v1/student-affairs/notices
+GET /api/v1/student-affairs/notices?page=2
+GET /api/v1/student-affairs/notices/latest
+GET /api/v1/student-affairs/notices/{date}/{id}
+```
+
+这两组接口同样使用统一的列表和正文响应结构，当前来源页面每页展示 10 条。
+
 ## 运行
 
 要求 Python 3.10 或更高版本，运行时没有第三方依赖。
@@ -130,6 +152,8 @@ Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/notices?page=2'
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/notices/2026-07-23/123456
 Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/college/news?page=2'
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/college/notices/latest
+Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/student-affairs/news?page=2'
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/student-affairs/notices/latest
 ```
 
 ## 配置
@@ -143,6 +167,10 @@ Invoke-RestMethod http://127.0.0.1:8000/api/v1/college/notices/latest
   "college": {
     "news_url": "https://sai.cugb.edu.cn/xyxw/",
     "notices_url": "https://sai.cugb.edu.cn/xygg/"
+  },
+  "student_affairs": {
+    "news_url": "https://bm.cugb.edu.cn/xgb/jjxg/",
+    "notices_url": "https://bm.cugb.edu.cn/xgb/tzgg/"
   },
   "server": {
     "host": "127.0.0.1",

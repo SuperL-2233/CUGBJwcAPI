@@ -12,6 +12,12 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(8000, settings.server.port)
         self.assertEqual("https://sai.cugb.edu.cn/xyxw/", settings.college.news_url)
         self.assertEqual("https://sai.cugb.edu.cn/xygg/", settings.college.notices_url)
+        self.assertEqual(
+            "https://bm.cugb.edu.cn/xgb/jjxg/", settings.student_affairs.news_url
+        )
+        self.assertEqual(
+            "https://bm.cugb.edu.cn/xgb/tzgg/", settings.student_affairs.notices_url
+        )
 
 
 if __name__ == "__main__":

@@ -63,6 +63,20 @@ def main(argv: list[str] | None = None) -> int:
                 NoticeRepository(college_client, settings.cache_ttl_seconds),
                 source_url,
             )
+        for prefix, source_url in {
+            "/api/v1/student-affairs/news": settings.student_affairs.news_url,
+            "/api/v1/student-affairs/notices": settings.student_affairs.notices_url,
+        }.items():
+            student_affairs_client = CollegeNoticeClient(
+                source_url,
+                timeout_seconds=settings.request_timeout_seconds,
+                retries=settings.request_retries,
+                detail_path_prefix="/xgb/c",
+            )
+            college_collections[prefix] = NoticeCollection(
+                NoticeRepository(student_affairs_client, settings.cache_ttl_seconds),
+                source_url,
+            )
         serve(
             ApiApplication(
                 repository,

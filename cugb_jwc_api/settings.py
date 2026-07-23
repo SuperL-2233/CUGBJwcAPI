@@ -19,6 +19,12 @@ class CollegeSettings:
 
 
 @dataclass(frozen=True, slots=True)
+class StudentAffairsSettings:
+    news_url: str = "https://bm.cugb.edu.cn/xgb/jjxg/"
+    notices_url: str = "https://bm.cugb.edu.cn/xgb/tzgg/"
+
+
+@dataclass(frozen=True, slots=True)
 class Settings:
     source_url: str = "https://jwc.cugb.edu.cn/xszq/"
     request_timeout_seconds: float = 10
@@ -26,6 +32,7 @@ class Settings:
     cache_ttl_seconds: int = 60
     server: ServerSettings = field(default_factory=ServerSettings)
     college: CollegeSettings = field(default_factory=CollegeSettings)
+    student_affairs: StudentAffairsSettings = field(default_factory=StudentAffairsSettings)
 
 
 def load_settings(path: Path) -> Settings:
@@ -44,6 +51,9 @@ def load_settings(path: Path) -> Settings:
     college_raw = raw.get("college", {})
     if not isinstance(college_raw, dict):
         raise ValueError("college must be a JSON object")
+    student_affairs_raw = raw.get("student_affairs", {})
+    if not isinstance(student_affairs_raw, dict):
+        raise ValueError("student_affairs must be a JSON object")
     settings = Settings(
         source_url=str(raw.get("source_url", "https://jwc.cugb.edu.cn/xszq/")),
         request_timeout_seconds=float(raw.get("request_timeout_seconds", 10)),
@@ -61,6 +71,18 @@ def load_settings(path: Path) -> Settings:
                 college_raw.get("notices_url", "https://sai.cugb.edu.cn/xygg/")
             ),
         ),
+        student_affairs=StudentAffairsSettings(
+            news_url=str(
+                student_affairs_raw.get(
+                    "news_url", "https://bm.cugb.edu.cn/xgb/jjxg/"
+                )
+            ),
+            notices_url=str(
+                student_affairs_raw.get(
+                    "notices_url", "https://bm.cugb.edu.cn/xgb/tzgg/"
+                )
+            ),
+        ),
     )
     _validate(settings)
     return settings
@@ -73,6 +95,8 @@ def _validate(settings: Settings) -> None:
     for name, value in {
         "college.news_url": settings.college.news_url,
         "college.notices_url": settings.college.notices_url,
+        "student_affairs.news_url": settings.student_affairs.news_url,
+        "student_affairs.notices_url": settings.student_affairs.notices_url,
     }.items():
         parsed_college_url = urlparse(value)
         if parsed_college_url.scheme != "https" or not parsed_college_url.netloc:

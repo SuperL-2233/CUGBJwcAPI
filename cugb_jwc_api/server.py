@@ -8,7 +8,7 @@ from .api import ApiApplication
 
 def make_handler(application: ApiApplication) -> type[BaseHTTPRequestHandler]:
     class ApiHandler(BaseHTTPRequestHandler):
-        server_version = "NoticeApi/1.2"
+        server_version = "NoticeApi/1.3"
 
         def do_GET(self) -> None:
             self._respond("GET")

@@ -7,6 +7,10 @@
     "news_url": "https://sai.cugb.edu.cn/xyxw/",
     "notices_url": "https://sai.cugb.edu.cn/xygg/"
   },
+  "student_affairs": {
+    "news_url": "https://bm.cugb.edu.cn/xgb/jjxg/",
+    "notices_url": "https://bm.cugb.edu.cn/xgb/tzgg/"
+  },
   "server": {
     "host": "127.0.0.1",
     "port": 8000
