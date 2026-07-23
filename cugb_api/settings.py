@@ -27,6 +27,7 @@ class StudentAffairsSettings:
 @dataclass(frozen=True, slots=True)
 class Settings:
     source_url: str = "https://jwc.cugb.edu.cn/xszq/"
+    teaching_updates_url: str = "https://jwc.cugb.edu.cn/jxdt/"
     request_timeout_seconds: float = 10
     request_retries: int = 2
     cache_ttl_seconds: int = 60
@@ -56,6 +57,9 @@ def load_settings(path: Path) -> Settings:
         raise ValueError("student_affairs must be a JSON object")
     settings = Settings(
         source_url=str(raw.get("source_url", "https://jwc.cugb.edu.cn/xszq/")),
+        teaching_updates_url=str(
+            raw.get("teaching_updates_url", "https://jwc.cugb.edu.cn/jxdt/")
+        ),
         request_timeout_seconds=float(raw.get("request_timeout_seconds", 10)),
         request_retries=int(raw.get("request_retries", 2)),
         cache_ttl_seconds=int(raw.get("cache_ttl_seconds", 60)),
@@ -93,6 +97,7 @@ def _validate(settings: Settings) -> None:
     if parsed.scheme != "https" or not parsed.netloc:
         raise ValueError("source_url must be an HTTPS URL")
     for name, value in {
+        "teaching_updates_url": settings.teaching_updates_url,
         "ai_college.news_url": settings.ai_college.news_url,
         "ai_college.notices_url": settings.ai_college.notices_url,
         "student_affairs.news_url": settings.student_affairs.news_url,

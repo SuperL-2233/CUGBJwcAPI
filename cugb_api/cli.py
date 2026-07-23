@@ -49,7 +49,19 @@ def main(argv: list[str] | None = None) -> int:
             retries=settings.request_retries,
         )
         repository = NoticeRepository(client, settings.cache_ttl_seconds)
-        extra_collections = {}
+        teaching_updates_client = NoticeClient(
+            settings.teaching_updates_url,
+            timeout_seconds=settings.request_timeout_seconds,
+            retries=settings.request_retries,
+        )
+        extra_collections = {
+            "/api/v1/teaching-updates": NoticeCollection(
+                NoticeRepository(
+                    teaching_updates_client, settings.cache_ttl_seconds
+                ),
+                settings.teaching_updates_url,
+            )
+        }
         for prefix, source_url in {
             "/api/v1/ai-college/news": settings.ai_college.news_url,
             "/api/v1/ai-college/notices": settings.ai_college.notices_url,

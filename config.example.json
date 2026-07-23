@@ -1,5 +1,6 @@
 {
   "source_url": "https://jwc.cugb.edu.cn/xszq/",
+  "teaching_updates_url": "https://jwc.cugb.edu.cn/jxdt/",
   "request_timeout_seconds": 10,
   "request_retries": 2,
   "cache_ttl_seconds": 60,

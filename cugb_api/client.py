@@ -61,7 +61,7 @@ class NoticeClient:
                 request = Request(
                     url,
                     headers={
-                        "User-Agent": "Notice-API/2.0",
+                        "User-Agent": "Notice-API/2.1",
                         "Accept": "text/html,application/xhtml+xml",
                         "Accept-Encoding": "gzip",
                     },

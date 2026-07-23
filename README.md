@@ -84,6 +84,17 @@ GET /api/v1/notices/2026-07-23/123456
 }
 ```
 
+### 教学动态
+
+```http
+GET /api/v1/teaching-updates
+GET /api/v1/teaching-updates?page=2
+GET /api/v1/teaching-updates/latest
+GET /api/v1/teaching-updates/{date}/{id}
+```
+
+列表、分页、最新一条和正文接口使用统一的响应结构。当前来源页面每页展示 9 条，实际数量和可用页数由来源网站决定。
+
 ### AI 学院栏目
 
 新闻列表：
@@ -150,6 +161,7 @@ python -m cugb_api --config config.json serve --host 0.0.0.0 --port 8080
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/notices
 Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/notices?page=2'
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/notices/2026-07-23/123456
+Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/teaching-updates?page=2'
 Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/ai-college/news?page=2'
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/ai-college/notices/latest
 Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/student-affairs/news?page=2'
@@ -161,6 +173,7 @@ Invoke-RestMethod http://127.0.0.1:8000/api/v1/student-affairs/notices/latest
 ```json
 {
   "source_url": "https://jwc.cugb.edu.cn/xszq/",
+  "teaching_updates_url": "https://jwc.cugb.edu.cn/jxdt/",
   "request_timeout_seconds": 10,
   "request_retries": 2,
   "cache_ttl_seconds": 60,
